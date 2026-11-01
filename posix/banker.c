@@ -14,14 +14,72 @@ static int is_safe_state(
     int request[]
 )
 {
-    /*
-     * TODO:
-     *
-     * Implement the Banker's
-     * Safety Algorithm.
-     */
+int n = bank->number_of_customers;
+    int m = bank->number_of_resources;
+    int work[MAX_RESOURCES];
+    int allocation[NUMBER_OF_CUSTOMERS][MAX_RESOURCES];
+    int need[NUMBER_OF_CUSTOMERS][MAX_RESOURCES];
+    int finish[NUMBER_OF_CUSTOMERS];
 
-    return 0;
+    /* temporary copies of the real state (Work = Available) */
+    for (int j = 0; j < m; j++)
+        work[j] = bank->available[j];
+    for (int i = 0; i < n; i++)
+    {
+        finish[i] = 0;      /* nobody has finished yet */
+        for (int j = 0; j < m; j++)
+        {
+            allocation[i][j] = bank->allocation[i][j];
+            need[i][j] = bank->need[i][j];
+        }
+    }
+
+    /* pretend the request was granted */
+    for (int j = 0; j < m; j++)
+    {
+        work[j] -= request[j];
+        allocation[customer_num][j] += request[j];
+        need[customer_num][j] -= request[j];
+    }
+
+    /* repeatedly look for a customer that can finish */
+    int progress = 1;
+    while (progress)
+    {
+        progress = 0;
+        for (int i = 0; i < n; i++)
+        {
+            if (finish[i])
+                continue;
+
+            /* Can customer i's remaining need be met by Work? */
+            int can_finish = 1;
+            for (int j = 0; j < m; j++)
+            {
+                if (need[i][j] > work[j])
+                {
+                    can_finish = 0;
+                    break;
+                }
+            }
+            if (!can_finish)
+                continue;
+           
+            /* customer i finishes and returns its resources */
+            for (int j = 0; j < m; j++)
+                work[j] += allocation[i][j];
+            finish[i] = 1;
+            progress = 1;
+        }
+    }
+
+    /* safe only if every customer was able to finish */
+    for (int i = 0; i < n; i++)
+    {
+        if (!finish[i])
+            return 0;
+    }
+    return 1;
 }
 
 
