@@ -36,26 +36,93 @@ int main(int argc, char *argv[])
 
 
     /*
-     * TODO:
-     *
-     * 1. Get the input filename.
-     *
-     * 2. Determine the number of
-     *    resource types.
-     *
-     * 3. Read the initial resource
-     *    values from argv[].
-     *
-     * 4. Call initialize_bank().
-     *
-     * 5. Open the input file.
-     *
-     * 6. Read the maximum demand
-     *    for each customer.
-     *
-     * 7. Call add_customer() for
-     *    each customer.
+     * Read the input filename and the
+     * initial resource counts from argv[].
      */
+    const char *filename = argv[1];
+    int number_of_resources = argc - 2;
+
+    if (number_of_resources > MAX_RESOURCES)
+    {
+        printf("Error: at most %d resource types supported\n", MAX_RESOURCES);
+        return 1;
+    }
+
+    int resources[MAX_RESOURCES];
+
+    for (int j = 0; j < number_of_resources; j++)
+    {
+        char *end;
+        long value = strtol(argv[j + 2], &end, 10);
+
+        if (*argv[j + 2] == '\0' || *end != '\0' || value < 0)
+        {
+            printf("Error: invalid resource value '%s'\n", argv[j + 2]);
+            return 1;
+        }
+
+        resources[j] = (int) value;
+    }
+
+    initialize_bank(&bank, number_of_resources, resources);
+
+
+    /*
+     * Read each customer's maximum demand
+     * (one comma-separated line per customer).
+     */
+    FILE *file = fopen(filename, "r");
+
+    if (file == NULL)
+    {
+        perror(filename);
+        return 1;
+    }
+
+    char line[256];
+
+    for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++)
+    {
+        if (fgets(line, sizeof line, file) == NULL)
+        {
+            printf("Error: %s has fewer than %d customer lines\n",
+                   filename, NUMBER_OF_CUSTOMERS);
+            fclose(file);
+            return 1;
+        }
+
+        int max_demand[MAX_RESOURCES];
+        int count = 0;
+        char *token = strtok(line, ",\r\n");
+
+        while (token != NULL)
+        {
+            char *end;
+            long value = strtol(token, &end, 10);
+
+            if (count == number_of_resources || *end != '\0' || value < 0)
+            {
+                count = -1;
+                break;
+            }
+
+            max_demand[count++] = (int) value;
+            token = strtok(NULL, ",\r\n");
+        }
+
+        if (count != number_of_resources)
+        {
+            printf("Error: line %d of %s must have %d "
+                   "non-negative integers\n",
+                   i + 1, filename, number_of_resources);
+            fclose(file);
+            return 1;
+        }
+
+        add_customer(&bank, i, max_demand);
+    }
+
+    fclose(file);
 
 
     /*
