@@ -216,6 +216,83 @@ int main(int argc, char *argv[])
             printf("Denied\n");
         }
         }
+        else if (strncmp(command, "RL", 2) == 0 &&
+         (command[2] == ' ' || command[2] == '\t' ||
+          command[2] == '\0'))
+        {
+        // Read the customer number for the release
+        char *token = strtok(command, " \t");
+        token = strtok(NULL, " \t");
+
+        if (token == NULL)
+        {
+            printf("Invalid RL format.\n");
+            continue;
+        }
+
+        char *end;
+        long customer = strtol(token, &end, 10);
+
+        if (end == token || *end != '\0' ||
+            customer < 0 || customer >= NUMBER_OF_CUSTOMERS)
+        {
+            printf("Invalid customer number.\n");
+            continue;
+        }
+        // Read the resource amounts to release
+        int release[MAX_RESOURCES];
+        int valid = 1;
+
+        for (int j = 0; j < bank.number_of_resources; j++)
+        {
+            token = strtok(NULL, " \t");
+
+            if (token == NULL)
+            {
+                valid = 0;
+                break;
+            }
+
+            long value = strtol(token, &end, 10);
+
+            if (end == token || *end != '\0' ||
+                value < 0 || value > INT_MAX)
+            {
+                valid = 0;
+                break;
+            }
+
+            release[j] = (int)value;
+        }
+
+        // Reject missing, extra, or invalid resource values
+        if (!valid || strtok(NULL, " \t") != NULL)
+        {
+            printf("Invalid resource release.\n");
+            continue;
+        }
+        // Check that the customer has enough resources to release
+        int can_release = 1;
+
+        for (int j = 0; j < bank.number_of_resources; j++)
+        {
+            if (release[j] > bank.allocation[(int)customer][j])
+            {
+                can_release = 0;
+                break;
+            }
+        }
+
+        if (!can_release)
+        {
+            printf("Denied: Cannot release more resources than allocated.\n");
+            continue;
+        }
+        // Release the customer's resources
+        release_resources(&bank, (int)customer, release);
+        
+        printf("Released\n");
+        }
         else if (command[0] != '\0')
         {
             printf("Unknown command: %s\n", command);
