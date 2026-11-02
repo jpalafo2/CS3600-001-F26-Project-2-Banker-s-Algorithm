@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "banker.h"
-
+#include <limits.h>
 
 int main(int argc, char *argv[])
 {
@@ -148,6 +148,73 @@ int main(int argc, char *argv[])
         if (strcmp(command, "*") == 0)
         {
             get_state(&bank);
+        }
+        else if (strncmp(command, "RQ", 2) == 0 &&
+         (command[2] == ' ' || command[2] == '\t' ||
+          command[2] == '\0'))
+        {
+        // Read the customer number
+        char *token = strtok(command, " \t");
+        token = strtok(NULL, " \t");
+
+        if (token == NULL)
+        {
+            printf("Invalid RQ format.\n");
+            continue;
+        }
+
+        char *end;
+        long customer = strtol(token, &end, 10);
+
+        if (end == token || *end != '\0' ||
+            customer < 0 || customer >= NUMBER_OF_CUSTOMERS)
+        {
+            printf("Invalid customer number.\n");
+            continue;
+        }
+
+        // Read the requested amount for each resource
+        int request[MAX_RESOURCES];
+        int valid = 1;
+
+        for (int j = 0; j < bank.number_of_resources; j++)
+        {
+            token = strtok(NULL, " \t");
+
+            if (token == NULL)
+            {
+                valid = 0;
+                break;
+            }
+
+            long value = strtol(token, &end, 10);
+
+            if (end == token || *end != '\0' ||
+                value < 0 || value > INT_MAX)
+            {
+                valid = 0;
+                break;
+            }
+
+            request[j] = (int)value;
+        }
+
+        // Reject missing, extra, or invalid values
+        if (!valid || strtok(NULL, " \t") != NULL)
+        {
+            printf("Invalid resource request.\n");
+            continue;
+        }
+
+        // Ask the banker whether the request is safe
+        if (request_resources(&bank, (int)customer, request) == 0)
+        {
+            printf("Approved\n");
+        }
+        else
+        {
+            printf("Denied\n");
+        }
         }
         else if (command[0] != '\0')
         {
