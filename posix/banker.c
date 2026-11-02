@@ -202,11 +202,36 @@ void release_resources(
     int release[]
 )
 {
+    int m = bank->number_of_resources;
+
+    /* Validate the customer number. */
+    if (customer_num < 0 ||
+        customer_num >= bank->number_of_customers)
+    {
+        return;
+    }
+
     /*
-     * TODO:
-     *
-     * Validate and release the resources.
+     * Validate the complete release before changing the bank.
+     * Reject negative values and attempts to release more than
+     * the customer currently holds.
      */
+    for (int j = 0; j < m; j++)
+    {
+        if (release[j] < 0 ||
+            release[j] > bank->allocation[customer_num][j])
+        {
+            return;
+        }
+    }
+
+    /* The release is valid, so update the bank. */
+    for (int j = 0; j < m; j++)
+    {
+        bank->available[j] += release[j];
+        bank->allocation[customer_num][j] -= release[j];
+        bank->need[customer_num][j] += release[j];
+    }
 }
 
 

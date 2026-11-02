@@ -7,6 +7,7 @@ In the is_safe_state function in banker.c, the chatbot Claude by Anthropic was u
 
 In the request_resources function in banker.c, the chatbot Claude by Anthropic was used to create some of the logic, specifically the for the safe state check and for applying the request. This was used as the logic confused me for a few and for code accuracy.
 
+In the release_resources function in posix/banker.c, Microsoft Copilot was used to explain the resource-release requirements and provide an initial implementation that I reviewed and added to the project. AI assistance was needed to understand how to reject an invalid release without partially modifying the bank. The AI-assisted code validates the customer number and release values, then updates Available, Allocation, and Need while preserving Need = Maximum - Allocation. Microsoft Copilot also assisted with compiling and planning tests for this function.
 ## 1. Project Overview
 
 In this project, you will implement the Banker's Algorithm, a deadlock-avoidance algorithm discussed in the Deadlocks section of the course.
