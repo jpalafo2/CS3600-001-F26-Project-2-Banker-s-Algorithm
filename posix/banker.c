@@ -14,14 +14,72 @@ static int is_safe_state(
     int request[]
 )
 {
-    /*
-     * TODO:
-     *
-     * Implement the Banker's
-     * Safety Algorithm.
-     */
+int n = bank->number_of_customers;
+    int m = bank->number_of_resources;
+    int work[MAX_RESOURCES];
+    int allocation[NUMBER_OF_CUSTOMERS][MAX_RESOURCES];
+    int need[NUMBER_OF_CUSTOMERS][MAX_RESOURCES];
+    int finish[NUMBER_OF_CUSTOMERS];
 
-    return 0;
+    /* temporary copies of the real state (Work = Available) */
+    for (int j = 0; j < m; j++)
+        work[j] = bank->available[j];
+    for (int i = 0; i < n; i++)
+    {
+        finish[i] = 0;      /* nobody has finished yet */
+        for (int j = 0; j < m; j++)
+        {
+            allocation[i][j] = bank->allocation[i][j];
+            need[i][j] = bank->need[i][j];
+        }
+    }
+
+    /* pretend the request was granted */
+    for (int j = 0; j < m; j++)
+    {
+        work[j] -= request[j];
+        allocation[customer_num][j] += request[j];
+        need[customer_num][j] -= request[j];
+    }
+
+    /* repeatedly look for a customer that can finish */
+    int progress = 1;
+    while (progress)
+    {
+        progress = 0;
+        for (int i = 0; i < n; i++)
+        {
+            if (finish[i])
+                continue;
+
+            /* Can customer i's remaining need be met by Work? */
+            int can_finish = 1;
+            for (int j = 0; j < m; j++)
+            {
+                if (need[i][j] > work[j])
+                {
+                    can_finish = 0;
+                    break;
+                }
+            }
+            if (!can_finish)
+                continue;
+           
+            /* customer i finishes and returns its resources */
+            for (int j = 0; j < m; j++)
+                work[j] += allocation[i][j];
+            finish[i] = 1;
+            progress = 1;
+        }
+    }
+
+    /* safe only if every customer was able to finish */
+    for (int i = 0; i < n; i++)
+    {
+        if (!finish[i])
+            return 0;
+    }
+    return 1;
 }
 
 
@@ -91,26 +149,46 @@ int request_resources(
     int request[]
 )
 {
-    /*
-     * TODO:
-     *
-     * 1. Validate the request.
-     *
-     * 2. Check whether the request
-     *    exceeds the customer's need.
-     *
-     * 3. Check whether the requested
-     *    resources are available.
-     *
-     * 4. Determine whether granting
-     *    the request leaves the
-     *    system in a safe state.
-     *
-     * 5. If approved, update the
-     *    appropriate data structures.
-     */
+    int m = bank->number_of_resources;
 
-    return -1;
+    /* Validate the customer number */
+    if (customer_num < 0 || customer_num >= bank->number_of_customers)
+        return -1;
+
+    /* Validate the request values (no negative quantities) */
+    for (int j = 0; j < m; j++)
+    {
+        if (request[j] < 0)
+            return -1;
+    }
+
+    /* Request must not exceed the customer's remaining need */
+    for (int j = 0; j < m; j++)
+    {
+        if (request[j] > bank->need[customer_num][j])
+            return -1;
+    }
+
+    /* Requested resources must currently be available */
+    for (int j = 0; j < m; j++)
+    {
+        if (request[j] > bank->available[j])
+            return -1;
+    }
+
+    /* Granting the request must leave the system in a safe state.
+     *    is_safe_state works on copies, so a denial changes nothing. */
+    if (!is_safe_state(bank, customer_num, request))
+        return -1;
+
+    /* Safe: permanently apply the request */
+    for (int j = 0; j < m; j++)
+    {
+        bank->available[j] -= request[j];
+        bank->allocation[customer_num][j] += request[j];
+        bank->need[customer_num][j] -= request[j];
+    }
+    return 0;
 }
 
 
