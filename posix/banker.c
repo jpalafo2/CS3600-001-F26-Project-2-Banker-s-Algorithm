@@ -149,26 +149,46 @@ int request_resources(
     int request[]
 )
 {
-    /*
-     * TODO:
-     *
-     * 1. Validate the request.
-     *
-     * 2. Check whether the request
-     *    exceeds the customer's need.
-     *
-     * 3. Check whether the requested
-     *    resources are available.
-     *
-     * 4. Determine whether granting
-     *    the request leaves the
-     *    system in a safe state.
-     *
-     * 5. If approved, update the
-     *    appropriate data structures.
-     */
+    int m = bank->number_of_resources;
 
-    return -1;
+    /* Validate the customer number */
+    if (customer_num < 0 || customer_num >= bank->number_of_customers)
+        return -1;
+
+    /* Validate the request values (no negative quantities) */
+    for (int j = 0; j < m; j++)
+    {
+        if (request[j] < 0)
+            return -1;
+    }
+
+    /* Request must not exceed the customer's remaining need */
+    for (int j = 0; j < m; j++)
+    {
+        if (request[j] > bank->need[customer_num][j])
+            return -1;
+    }
+
+    /* Requested resources must currently be available */
+    for (int j = 0; j < m; j++)
+    {
+        if (request[j] > bank->available[j])
+            return -1;
+    }
+
+    /* Granting the request must leave the system in a safe state.
+     *    is_safe_state works on copies, so a denial changes nothing. */
+    if (!is_safe_state(bank, customer_num, request))
+        return -1;
+
+    /* Safe: permanently apply the request */
+    for (int j = 0; j < m; j++)
+    {
+        bank->available[j] -= request[j];
+        bank->allocation[customer_num][j] += request[j];
+        bank->need[customer_num][j] -= request[j];
+    }
+    return 0;
 }
 
 

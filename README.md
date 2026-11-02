@@ -1,11 +1,11 @@
 # Programming Project: Banker's Algorithm
 
 ## AI Disclaimer
-AI was used to help complete this project.
+AI was used to help complete this project. Usages:
 
-Usages:
+In the is_safe_state function in banker.c, the chatbot Claude by Anthropic was used to write a basic Banker's Algorithm that I could modify. This was used to help explain the algorithm and how it could be used. It was also used to make sure the function was correctly implented and ready for grading.
 
-In the is_safe_state function, the chatbot Claude by Anthropic was used to write a basic Banker's Algorithm that I could modify. This was used to help explain the algorithm and how it could be used. It was also used to make sure the function was correctly implented and ready for grading.
+In the request_resources function in banker.c, the chatbot Claude by Anthropic was used to create some of the logic, specifically the for the safe state check and for applying the request. This was used as the logic confused me for a few and for code accuracy.
 
 ## 1. Project Overview
 
