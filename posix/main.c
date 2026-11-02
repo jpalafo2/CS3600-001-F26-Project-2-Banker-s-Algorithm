@@ -125,38 +125,35 @@ int main(int argc, char *argv[])
     fclose(file);
 
 
-    /*
-     * TODO:
-     *
-     * Repeatedly read commands
-     * from the user.
-     *
-     * Required commands:
-     *
-     * RQ <customer> <R0> <R1> ... <Rm-1>
-     *
-     * RL <customer> <R0> <R1> ... <Rm-1>
-     *
-     * *
-     *
-     *
-     * RQ:
-     *
-     * Call:
-     * request_resources(...)
-     *
-     *
-     * RL:
-     *
-     * Call:
-     * release_resources(...)
-     *
-     *
-     * *:
-     *
-     * Call:
-     * get_state(...)
+        /*
+     * Read user commands until the program ends.
      */
+    char command[512];
+
+    while (1)
+    {
+        printf("banker> ");
+        fflush(stdout);
+
+        // Read the user's input
+        if (fgets(command, sizeof(command), stdin) == NULL)
+        {
+            break;
+        }
+
+        // Remove the newline character
+        command[strcspn(command, "\r\n")] = '\0';
+
+        // Display the current bank state
+        if (strcmp(command, "*") == 0)
+        {
+            get_state(&bank);
+        }
+        else if (command[0] != '\0')
+        {
+            printf("Unknown command: %s\n", command);
+        }
+    }
 
     return 0;
 }
